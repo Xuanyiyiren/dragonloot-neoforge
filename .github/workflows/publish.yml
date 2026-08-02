@@ -39,13 +39,11 @@ jobs:
           version: '${{ steps.properties.outputs.mod_version }}+${{ steps.properties.outputs.minecraft_version }}'
           game-versions: |
             ${{ steps.properties.outputs.minecraft_version }}
+          loaders: |
+            neoforge
 
           version-type: release
           version-resolver: exact
-
-          dependencies: |
-            fabric-api | depends | *
-            cloth-config | depends | *
 
           changelog-file: CHANGELOG.md
 

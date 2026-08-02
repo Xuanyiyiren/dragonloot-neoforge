@@ -11,24 +11,16 @@
     },
     "perspectives": {
         "firstperson_lefthand": {
-            "parent": "dragonloot:item/dragon_trident_in_hand"
+            "parent": "dragonloot:item/dragon_trident_throwing"
         },
         "firstperson_righthand": {
-            "parent": "dragonloot:item/dragon_trident_in_hand"
+            "parent": "dragonloot:item/dragon_trident_throwing"
         },
         "thirdperson_lefthand": {
-            "parent": "dragonloot:item/dragon_trident_in_hand"
+            "parent": "dragonloot:item/dragon_trident_throwing"
         },
         "thirdperson_righthand": {
-            "parent": "dragonloot:item/dragon_trident_in_hand"
+            "parent": "dragonloot:item/dragon_trident_throwing"
         }
-    },
-    "overrides": [
-        {
-            "predicate": {
-                "throwing": 1
-            },
-            "model": "dragonloot:item/dragon_trident_throwing_state"
-        }
-    ]
+    }
 }

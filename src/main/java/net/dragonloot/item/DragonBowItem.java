@@ -1,7 +1,9 @@
 package net.dragonloot.item;
 
+import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 public class DragonBowItem extends BowItem {
 
@@ -9,5 +11,8 @@ public class DragonBowItem extends BowItem {
         super(properties);
     }
 
-    // No overrides needed for now - this class exists for future customization
+    @Override
+    public AbstractArrow customArrow(AbstractArrow arrow, ItemStack projectileStack, ItemStack weaponStack) {
+        return DragonProjectileDamage.apply(arrow);
+    }
 }

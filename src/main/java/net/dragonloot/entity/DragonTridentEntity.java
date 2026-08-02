@@ -2,15 +2,11 @@ package net.dragonloot.entity;
 
 import net.dragonloot.init.EntityInit;
 import net.dragonloot.init.ItemInit;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
@@ -18,14 +14,14 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.AbstractArrow.Pickup;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TridentItem;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 
@@ -33,7 +29,6 @@ public class DragonTridentEntity extends AbstractArrow {
 	private static final EntityDataAccessor<Byte> LOYALTY = SynchedEntityData.defineId(DragonTridentEntity.class, EntityDataSerializers.BYTE);
 	private static final EntityDataAccessor<Boolean> ENCHANTED = SynchedEntityData.defineId(DragonTridentEntity.class, EntityDataSerializers.BOOLEAN);
 
-	private ItemStack tridentStack = ItemInit.DRAGON_TRIDENT_ITEM.get().getDefaultInstance();
 	private boolean dealtDamage;
 	public int returnTimer;
 
@@ -42,8 +37,7 @@ public class DragonTridentEntity extends AbstractArrow {
 	}
 
 	public DragonTridentEntity(Level level, LivingEntity owner, ItemStack stack) {
-		super(EntityInit.DRAGONTRIDENT_ENTITY.get(), owner, level, stack, stack);
-		this.tridentStack = stack.copy();
+		super(EntityInit.DRAGONTRIDENT_ENTITY.get(), owner, level, stack, null);
 		this.entityData.set(LOYALTY, this.getLoyaltyFromItem(stack));
 		this.entityData.set(ENCHANTED, stack.hasFoil());
 	}
@@ -51,7 +45,6 @@ public class DragonTridentEntity extends AbstractArrow {
 	public DragonTridentEntity(Level level, double x, double y, double z, ItemStack stack) {
 		super(EntityInit.DRAGONTRIDENT_ENTITY.get(), x, y, z, level, stack, stack);
 		this.setPos(x, y, z);
-		this.tridentStack = stack.copy();
 		this.entityData.set(LOYALTY, this.getLoyaltyFromItem(stack));
 		this.entityData.set(ENCHANTED, stack.hasFoil());
 	}
@@ -82,7 +75,7 @@ public class DragonTridentEntity extends AbstractArrow {
 				Vec3 motion = new Vec3(owner.getX() - this.getX(), owner.getEyeY() - this.getY(), owner.getZ() - this.getZ());
 				this.setPos(this.getX(), this.getY() + motion.y * 0.015D * loyalty, this.getZ());
 				if (this.level().isClientSide) {
-					this.yo = this.getY();
+					this.yOld = this.getY();
 				}
 				Vec3 velocity = this.getDeltaMovement().scale(0.95D).add(motion.normalize().scale(0.05D * loyalty));
 				this.setDeltaMovement(velocity);
@@ -105,7 +98,12 @@ public class DragonTridentEntity extends AbstractArrow {
 
 	@Override
 	protected ItemStack getDefaultPickupItem() {
-		return this.tridentStack.copy();
+		return ItemInit.DRAGON_TRIDENT_ITEM.get().getDefaultInstance();
+	}
+
+	@Override
+	public ItemStack getWeaponItem() {
+		return this.getPickupItemStackOrigin();
 	}
 
 	public boolean isEnchanted() {
@@ -120,32 +118,46 @@ public class DragonTridentEntity extends AbstractArrow {
 	@Override
 	protected void onHitEntity(EntityHitResult result) {
 		Entity target = result.getEntity();
-		float damage = 8.0F;
+		float damage = TridentItem.BASE_DAMAGE;
 		Entity owner = this.getOwner();
 		DamageSource source = this.damageSources().trident(this, owner == null ? this : owner);
-		ServerLevel serverLevel = this.level() instanceof ServerLevel server ? server : null;
-		if (serverLevel != null) {
-			damage = EnchantmentHelper.modifyDamage(serverLevel, this.tridentStack, target, source, damage);
+		if (this.level() instanceof ServerLevel serverLevel) {
+			damage = EnchantmentHelper.modifyDamage(serverLevel, this.getWeaponItem(), target, source, damage);
 		}
 
 		this.dealtDamage = true;
-		SoundEvent sound = SoundEvents.TRIDENT_HIT;
-		float thunderSoundVolume = 1.0F;
-		if (serverLevel != null && serverLevel.isThundering() && this.hasChanneling()) {
-			BlockPos pos = target.blockPosition();
-			if (serverLevel.canSeeSky(pos)) {
-				LightningBolt lightning = EntityType.LIGHTNING_BOLT.create(serverLevel);
-				if (lightning != null) {
-					lightning.moveTo(Vec3.atBottomCenterOf(pos));
-					lightning.setCause(owner instanceof ServerPlayer ? (ServerPlayer) owner : null);
-					serverLevel.addFreshEntity(lightning);
-					sound = SoundEvents.TRIDENT_THUNDER.value();
-					thunderSoundVolume = 5.0F;
-				}
+		if (target.hurt(source, damage)) {
+			if (target.getType() == EntityType.ENDERMAN) {
+				return;
+			}
+
+			if (this.level() instanceof ServerLevel serverLevel) {
+				EnchantmentHelper.doPostAttackEffectsWithItemSource(serverLevel, target, source, this.getWeaponItem());
+			}
+
+			if (target instanceof LivingEntity livingTarget) {
+				this.doKnockback(livingTarget, source);
+				this.doPostHurtEffects(livingTarget);
 			}
 		}
 
-		this.playSound(sound, thunderSoundVolume, 1.0F);
+		this.setDeltaMovement(this.getDeltaMovement().multiply(-0.01D, -0.1D, -0.01D));
+		this.playSound(SoundEvents.TRIDENT_HIT, 1.0F, 1.0F);
+	}
+
+	@Override
+	protected void hitBlockEnchantmentEffects(ServerLevel serverLevel, BlockHitResult result, ItemStack stack) {
+		Vec3 hitLocation = result.getBlockPos().clampLocationWithin(result.getLocation());
+		EnchantmentHelper.onHitBlock(
+				serverLevel,
+				stack,
+				this.getOwner() instanceof LivingEntity livingOwner ? livingOwner : null,
+				this,
+				null,
+				hitLocation,
+				serverLevel.getBlockState(result.getBlockPos()),
+				ignored -> this.kill()
+		);
 	}
 
 	@Override
@@ -162,22 +174,24 @@ public class DragonTridentEntity extends AbstractArrow {
 	}
 
 	@Override
+	protected boolean tryPickup(Player player) {
+		return super.tryPickup(player)
+				|| this.isNoPhysics() && this.ownedBy(player) && player.getInventory().add(this.getPickupItem());
+	}
+
+	@Override
 	public void readAdditionalSaveData(CompoundTag tag) {
 		super.readAdditionalSaveData(tag);
-		if (tag.contains("Trident", 10)) {
-			// Wrap CompoundTag in Dynamic using NbtOps.INSTANCE for decoding
-			this.tridentStack = ItemStack.CODEC.parse(NbtOps.INSTANCE, tag.get("Trident")).result().orElse(ItemStack.EMPTY);
-		}
 		this.dealtDamage = tag.getBoolean("DealtDamage");
-		this.entityData.set(LOYALTY, this.getLoyaltyFromItem(this.tridentStack));
-		this.entityData.set(ENCHANTED, this.tridentStack.hasFoil());
+		ItemStack stack = this.getPickupItemStackOrigin();
+		this.entityData.set(LOYALTY, this.getLoyaltyFromItem(stack));
+		this.entityData.set(ENCHANTED, stack.hasFoil());
 	}
 
 	@Override
 	public void addAdditionalSaveData(CompoundTag tag) {
 		super.addAdditionalSaveData(tag);
-		// Save ItemStack to CompoundTag using NbtOps.INSTANCE
-		tag.put("Trident", ItemStack.CODEC.encodeStart(NbtOps.INSTANCE, this.tridentStack).result().orElse(new CompoundTag()));
+		tag.putBoolean("DealtDamage", this.dealtDamage);
 	}
 
 	@Override
@@ -206,11 +220,4 @@ public class DragonTridentEntity extends AbstractArrow {
 		return 0;
 	}
 
-	private boolean hasChanneling() {
-        if (this.level() instanceof ServerLevel serverLevel) {
-            var enchantment = serverLevel.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.ENCHANTMENT).getHolderOrThrow(Enchantments.CHANNELING);
-            return this.tridentStack.getEnchantmentLevel(enchantment) > 0;
-        }
-        return false;
-    }
 }
