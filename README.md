@@ -1,5 +1,19 @@
 # DragonLoot
 
+## Maintainer's Note
+
+I am an ordinary Minecraft player and had never worked on a Java project before this repository.
+
+This fork exists because several regressions that become apparent during a basic gameplay check remained unresolved. I eventually learned enough of the toolchain to investigate and repair them myself.
+
+I originally reported these three issues upstream and later addressed them here myself:
+
+- #1: Dragon Bow appears to have no damage bonus: https://github.com/nullifyac/dragonloot-forge-neoforge/issues/1
+- #2: Dragon Trident consumes durability but is not thrown: https://github.com/nullifyac/dragonloot-forge-neoforge/issues/2
+- #3: Dragon Trident renders as a flat 2D item while held: https://github.com/nullifyac/dragonloot-forge-neoforge/issues/3
+
+When players with no relevant development experience are pushed into maintaining a project simply to make its advertised features work, that says something about the state of upstream maintenance.
+
 DragonLoot adds dragon-themed equipment to Minecraft. This standalone project targets Minecraft 1.21.1 on NeoForge.
 
 ## Requirements
@@ -24,9 +38,17 @@ The installable mod is written to `build/libs/dragonloot-1.1.10.jar`. Do not ins
 - Dragon Trident throws a custom projectile with vanilla-shaped trident behavior.
 - A held Dragon Trident renders as a 3D model, while inventory-oriented contexts remain 2D.
 
+## In-Game Verification
+
+The Dragon Trident rendering and throwing fixes were verified in Minecraft 1.21.1 with NeoForge.
+
+| Held | Charging | Thrown |
+| :---: | :------: | :----: |
+| ![Dragon Trident held in 3D](figs/held.png) | ![Dragon Trident charging pose](figs/charging.png) | ![Thrown Dragon Trident projectile](figs/thrown.png) |
+
 ## Manual Verification
 
-These checks must be performed in Minecraft with `build/libs/dragonloot-1.1.10.jar`; they are not automated or claimed as completed here.
+The fixes were verified in-game with `build/libs/dragonloot-1.1.10.jar`. The checks remain useful when validating future builds.
 
 - Fire the same arrows from fully charged, unenchanted vanilla and Dragon bows at equivalent unarmored targets. Because critical damage is random, repeat the test or inspect target health and verify the Dragon arrow uses `base * 1.25 + 1` damage.
 - Fire the same unenchanted arrows from vanilla and Dragon crossbows at equivalent unarmored targets and verify the Dragon arrow uses the same formula. Separately fire fireworks and verify they receive no arrow damage multiplier.
