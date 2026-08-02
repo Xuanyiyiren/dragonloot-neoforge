@@ -4,15 +4,13 @@
 
 I am an ordinary Minecraft player and had never worked on a Java project before this repository.
 
-This fork exists because several regressions that become apparent during a basic gameplay check remained unresolved. I eventually learned enough of the toolchain to investigate and repair them myself.
+This fork exists because several regressions apparent during basic gameplay remained unresolved. With no prior Java experience, I turned to GPT-5.6 to investigate them.
 
-I originally reported these three issues upstream and later addressed them here myself:
+I originally reported the following three issues upstream; the fixes in this fork were produced with GPT-5.6:
 
 - #1: Dragon Bow appears to have no damage bonus: https://github.com/nullifyac/dragonloot-forge-neoforge/issues/1
 - #2: Dragon Trident consumes durability but is not thrown: https://github.com/nullifyac/dragonloot-forge-neoforge/issues/2
 - #3: Dragon Trident renders as a flat 2D item while held: https://github.com/nullifyac/dragonloot-forge-neoforge/issues/3
-
-When players with no relevant development experience are pushed into maintaining a project simply to make its advertised features work, that says something about the state of upstream maintenance.
 
 DragonLoot adds dragon-themed equipment to Minecraft. This standalone project targets Minecraft 1.21.1 on NeoForge.
 
