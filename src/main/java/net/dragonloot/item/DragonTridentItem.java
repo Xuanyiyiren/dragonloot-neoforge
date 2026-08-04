@@ -1,6 +1,7 @@
 package net.dragonloot.item;
 
 import net.dragonloot.entity.DragonTridentEntity;
+import net.dragonloot.init.ConfigInit;
 import net.minecraft.core.Holder;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -11,11 +12,14 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TridentItem;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.enchantment.EnchantmentEffectComponents;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
@@ -25,6 +29,21 @@ public class DragonTridentItem extends TridentItem {
 
     public DragonTridentItem(Item.Properties properties) {
         super(properties);
+    }
+
+    @Override
+    public ItemAttributeModifiers getDefaultAttributeModifiers(ItemStack stack) {
+        ItemAttributeModifiers.Builder builder = ItemAttributeModifiers.builder();
+        double damageBonus = ConfigInit.CONFIG.dragon_item_base_damage / 5.0F;
+        for (ItemAttributeModifiers.Entry entry : TridentItem.createAttributes().modifiers()) {
+            AttributeModifier modifier = entry.modifier();
+            if (entry.attribute().equals(Attributes.ATTACK_DAMAGE)
+                    && modifier.operation() == AttributeModifier.Operation.ADD_VALUE) {
+                modifier = new AttributeModifier(modifier.id(), modifier.amount() + damageBonus, modifier.operation());
+            }
+            builder.add(entry.attribute(), modifier, entry.slot());
+        }
+        return builder.build();
     }
 
     @Override

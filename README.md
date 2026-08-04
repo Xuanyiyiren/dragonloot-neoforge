@@ -14,6 +14,15 @@ I originally reported the following three issues upstream; the fixes in this for
 
 DragonLoot adds dragon-themed equipment to Minecraft. This standalone project targets Minecraft 1.21.1 on NeoForge.
 
+## Source and Scope
+
+The reported regressions were observed in the CurseForge project [`Enderdragon Loot` release 1.1.15](https://www.curseforge.com/minecraft/mc-mods/enderdragon-loot/files/7611990) for Minecraft 1.21.1 on NeoForge.
+That release links to https://github.com/nullifyac/dragonloot-forge-neoforge, but when this fork was prepared, the public repository exposed [a 1.1.10 source baseline](https://github.com/nullifyac/dragonloot-forge-neoforge/tree/cf8e6e4fcbaaca4603cfa8b0a5fd31e4c415b55f/DragonLoot-1.21.1-neoforge/DragonLoot-1.21) and no commit, tag, branch, or release matching the published 1.1.15 JAR.
+
+This standalone repository starts from that public 1.1.10 source baseline.
+Additional behavior observed in the publicly distributed 1.1.15 JAR was reimplemented here against NeoForge 1.21.1 APIs, alongside this fork's repairs for Dragon Bow damage, Dragon Trident throw and hit behavior, and the held 3D trident model.
+Known-broken 1.1.15 implementations of those behaviors were not copied back.
+
 ## Requirements
 
 - Minecraft 1.21.1
@@ -28,7 +37,7 @@ Run:
 ./gradlew build
 ```
 
-The installable mod is written to `build/libs/dragonloot-1.1.10.jar`. Do not install the `-sources.jar`; it contains source code and is not a playable mod.
+The installable mod is written to `build/libs/dragonloot-1.1.15-fix.jar`. Do not install the `-sources.jar`; it contains source code and is not a playable mod.
 
 ## Repaired Behavior
 
@@ -39,6 +48,7 @@ The installable mod is written to `build/libs/dragonloot-1.1.10.jar`. Do not ins
 ## In-Game Verification
 
 The Dragon Trident rendering and throwing fixes were verified in Minecraft 1.21.1 with NeoForge.
+The Dragon Trident's melee attack was also verified in-game: it displayed 10 attack damage, and the actual damage matched the displayed value.
 
 | Held | Charging | Thrown |
 | :---: | :------: | :----: |
@@ -46,7 +56,7 @@ The Dragon Trident rendering and throwing fixes were verified in Minecraft 1.21.
 
 ## Manual Verification
 
-The fixes were verified in-game with `build/libs/dragonloot-1.1.10.jar`. The checks remain useful when validating future builds.
+The repaired bow and trident behavior was previously verified in-game. The checks remain useful when validating future builds.
 
 - Fire the same arrows from fully charged, unenchanted vanilla and Dragon bows at equivalent unarmored targets. Because critical damage is random, repeat the test or inspect target health and verify the Dragon arrow uses `base * 1.25 + 1` damage.
 - Fire the same unenchanted arrows from vanilla and Dragon crossbows at equivalent unarmored targets and verify the Dragon arrow uses the same formula. Separately fire fireworks and verify they receive no arrow damage multiplier.

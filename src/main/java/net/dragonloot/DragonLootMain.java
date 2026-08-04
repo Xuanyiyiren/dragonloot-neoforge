@@ -2,6 +2,7 @@ package net.dragonloot;
 
 import net.dragonloot.compat.recipes.CompatRecipes;
 import net.dragonloot.compat.recipes.RecipeGenerator;
+import net.dragonloot.event.DragonLootNeoForgeEvents;
 import net.dragonloot.init.BlockInit;
 import net.dragonloot.init.ConfigInit;
 import net.dragonloot.init.EntityInit;
@@ -10,6 +11,7 @@ import net.dragonloot.init.NetworkInit;
 import net.dragonloot.init.TagInit;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.Mod;
@@ -30,10 +32,12 @@ public class DragonLootMain {
         ItemInit.ITEMS.register(modBus);
         ItemInit.ARMOR_MATERIALS.register(modBus);
         ItemInit.CREATIVE_TABS.register(modBus);
+        ItemInit.registerModEvents(modBus);
         EntityInit.ENTITY_TYPES.register(modBus);
         NetworkInit.register(modBus);
 
         modBus.addListener(this::commonSetup);
+        NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, false, DragonLootNeoForgeEvents::onLivingDeath);
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
             DragonLootClient.registerClientListeners(modBus);

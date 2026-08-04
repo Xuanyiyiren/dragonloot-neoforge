@@ -21,7 +21,11 @@ public class DragonToolMaterial implements Tier {
 
     @Override
     public int getUses() {
-        return 67 * ConfigInit.CONFIG.dragon_item_durability_multiplier;
+        int durabilityMultiplier = ConfigInit.CONFIG.dragon_item_durability_multiplier;
+        if (ConfigInit.CONFIG.advanced_netherite_gear_perks_enabled) {
+            durabilityMultiplier = Math.max(durabilityMultiplier, 47);
+        }
+        return 67 * durabilityMultiplier;
     }
 
     @Override

@@ -14,6 +14,7 @@ import net.dragonloot.item.DragonShovelItem;
 import net.dragonloot.item.DragonSwordItem;
 import net.dragonloot.item.DragonToolMaterial;
 import net.dragonloot.item.DragonTridentItem;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.AnimalArmorItem;
@@ -21,8 +22,15 @@ import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.HoeItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.PickaxeItem;
+import net.minecraft.world.item.ShovelItem;
+import net.minecraft.world.item.TridentItem;
+import net.minecraft.world.item.component.ChargedProjectiles;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.event.ModifyDefaultComponentsEvent;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -47,15 +55,15 @@ public final class ItemInit {
     public static final DeferredHolder<Item, Item> DRAGON_BOOTS = ITEMS.register("dragon_boots", () -> new DragonArmorItem(DRAGON_ARMOR_MATERIAL, ArmorItem.Type.BOOTS, armorProperties(ArmorItem.Type.BOOTS)));
     public static final DeferredHolder<Item, Item> UPGRADED_DRAGON_CHESTPLATE = ITEMS.register("upgraded_dragon_chestplate", () -> new DragonArmorItem(DRAGON_ARMOR_MATERIAL, ArmorItem.Type.CHESTPLATE, armorProperties(ArmorItem.Type.CHESTPLATE).fireResistant()));
 
-    public static final DeferredHolder<Item, Item> DRAGON_PICKAXE_ITEM = ITEMS.register("dragon_pickaxe", () -> new DragonPickaxeItem(DragonToolMaterial.getInstance(), toolProperties()));
+    public static final DeferredHolder<Item, Item> DRAGON_PICKAXE_ITEM = ITEMS.register("dragon_pickaxe", () -> new DragonPickaxeItem(DragonToolMaterial.getInstance(), toolProperties().attributes(PickaxeItem.createAttributes(DragonToolMaterial.getInstance(), 1.0F, -2.8F))));
     public static final DeferredHolder<Item, Item> DRAGON_AXE_ITEM = ITEMS.register("dragon_axe", () -> new DragonAxeItem(DragonToolMaterial.getInstance(), toolProperties()));
-    public static final DeferredHolder<Item, Item> DRAGON_SHOVEL_ITEM = ITEMS.register("dragon_shovel", () -> new DragonShovelItem(DragonToolMaterial.getInstance(), toolProperties()));
-    public static final DeferredHolder<Item, Item> DRAGON_HOE_ITEM = ITEMS.register("dragon_hoe", () -> new DragonHoeItem(DragonToolMaterial.getInstance(), toolProperties()));
+    public static final DeferredHolder<Item, Item> DRAGON_SHOVEL_ITEM = ITEMS.register("dragon_shovel", () -> new DragonShovelItem(DragonToolMaterial.getInstance(), toolProperties().attributes(ShovelItem.createAttributes(DragonToolMaterial.getInstance(), 1.5F, -3.0F))));
+    public static final DeferredHolder<Item, Item> DRAGON_HOE_ITEM = ITEMS.register("dragon_hoe", () -> new DragonHoeItem(DragonToolMaterial.getInstance(), toolProperties().attributes(HoeItem.createAttributes(DragonToolMaterial.getInstance(), -4.0F, 0.0F))));
 
     public static final DeferredHolder<Item, Item> DRAGON_SWORD_ITEM = ITEMS.register("dragon_sword", () -> new DragonSwordItem(DragonToolMaterial.getInstance(), toolProperties()));
     public static final DeferredHolder<Item, Item> DRAGON_BOW_ITEM = ITEMS.register("dragon_bow", () -> new DragonBowItem(new Item.Properties().fireResistant().durability(DragonToolMaterial.getInstance().getUses())));
-    public static final DeferredHolder<Item, Item> DRAGON_CROSSBOW_ITEM = ITEMS.register("dragon_crossbow", () -> new DragonCrossbowItem(new Item.Properties().fireResistant().durability(DragonToolMaterial.getInstance().getUses())));
-    public static final DeferredHolder<Item, Item> DRAGON_TRIDENT_ITEM = ITEMS.register("dragon_trident", () -> new DragonTridentItem(new Item.Properties().fireResistant().durability(DragonToolMaterial.getInstance().getUses())));
+    public static final DeferredHolder<Item, Item> DRAGON_CROSSBOW_ITEM = ITEMS.register("dragon_crossbow", () -> new DragonCrossbowItem(new Item.Properties().fireResistant().durability(DragonToolMaterial.getInstance().getUses()).component(DataComponents.CHARGED_PROJECTILES, ChargedProjectiles.EMPTY)));
+    public static final DeferredHolder<Item, Item> DRAGON_TRIDENT_ITEM = ITEMS.register("dragon_trident", () -> new DragonTridentItem(new Item.Properties().fireResistant().durability(DragonToolMaterial.getInstance().getUses()).component(DataComponents.TOOL, TridentItem.createToolProperties())));
 
     public static final DeferredHolder<Item, Item> DRAGON_ANVIL_ITEM = ITEMS.register("dragon_anvil", () -> new BlockItem(BlockInit.DRAGON_ANVIL_BLOCK.get(), new Item.Properties()));
 
@@ -82,8 +90,45 @@ public final class ItemInit {
         })
         .build());
 
+    public static void registerModEvents(IEventBus modBus) {
+        modBus.addListener(ItemInit::modifyDefaultComponents);
+    }
+
+    private static void modifyDefaultComponents(ModifyDefaultComponentsEvent event) {
+        DragonToolMaterial tier = DragonToolMaterial.getInstance();
+        int toolDurability = tier.getUses();
+        setMaxDamage(event, DRAGON_PICKAXE_ITEM, toolDurability);
+        setMaxDamage(event, DRAGON_AXE_ITEM, toolDurability);
+        setMaxDamage(event, DRAGON_SHOVEL_ITEM, toolDurability);
+        setMaxDamage(event, DRAGON_HOE_ITEM, toolDurability);
+        setMaxDamage(event, DRAGON_SWORD_ITEM, toolDurability);
+        setMaxDamage(event, DRAGON_BOW_ITEM, toolDurability);
+        setMaxDamage(event, DRAGON_CROSSBOW_ITEM, toolDurability);
+        setMaxDamage(event, DRAGON_TRIDENT_ITEM, toolDurability);
+
+        event.modify(DRAGON_PICKAXE_ITEM.get(), components -> components.set(DataComponents.ATTRIBUTE_MODIFIERS, PickaxeItem.createAttributes(tier, 1.0F, -2.8F)));
+        event.modify(DRAGON_SHOVEL_ITEM.get(), components -> components.set(DataComponents.ATTRIBUTE_MODIFIERS, ShovelItem.createAttributes(tier, 1.5F, -3.0F)));
+        event.modify(DRAGON_HOE_ITEM.get(), components -> components.set(DataComponents.ATTRIBUTE_MODIFIERS, HoeItem.createAttributes(tier, -4.0F, 0.0F)));
+
+        int armorDurabilityMultiplier = effectiveDragonArmorDurabilityMultiplier();
+        setMaxDamage(event, DRAGON_HELMET, ArmorItem.Type.HELMET.getDurability(armorDurabilityMultiplier));
+        setMaxDamage(event, DRAGON_CHESTPLATE, ArmorItem.Type.CHESTPLATE.getDurability(armorDurabilityMultiplier));
+        setMaxDamage(event, DRAGON_LEGGINGS, ArmorItem.Type.LEGGINGS.getDurability(armorDurabilityMultiplier));
+        setMaxDamage(event, DRAGON_BOOTS, ArmorItem.Type.BOOTS.getDurability(armorDurabilityMultiplier));
+        setMaxDamage(event, UPGRADED_DRAGON_CHESTPLATE, ArmorItem.Type.CHESTPLATE.getDurability(armorDurabilityMultiplier));
+    }
+
+    private static void setMaxDamage(ModifyDefaultComponentsEvent event, DeferredHolder<Item, Item> item, int maxDamage) {
+        event.modify(item.get(), components -> components.set(DataComponents.MAX_DAMAGE, maxDamage));
+    }
+
     private static Item.Properties armorProperties(ArmorItem.Type type) {
-        return new Item.Properties().fireResistant().durability(type.getDurability(ConfigInit.CONFIG.dragon_armor_durability_multiplier));
+        return new Item.Properties().fireResistant().durability(type.getDurability(effectiveDragonArmorDurabilityMultiplier()));
+    }
+
+    private static int effectiveDragonArmorDurabilityMultiplier() {
+        int durabilityMultiplier = ConfigInit.CONFIG.dragon_armor_durability_multiplier;
+        return ConfigInit.CONFIG.advanced_netherite_gear_perks_enabled ? Math.max(durabilityMultiplier, 47) : durabilityMultiplier;
     }
 
     private static Item.Properties toolProperties() {
